@@ -1,0 +1,16 @@
+{
+    "name": "JFFG Guide Lines Plugin",
+    "buttons": [
+        {
+            "name": "Add Guide Lines",
+            "command": "JFFGGuideLines.AddGuideLine",
+            "iconText": "AG"
+        },
+        {
+            "name": "Clear Guide Lines",
+            "command": "JFFGGuideLines.ClearGuideLines",
+            "iconText": "CL"
+        }
+
+    ]
+}
