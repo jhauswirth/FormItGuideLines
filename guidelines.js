@@ -132,21 +132,16 @@ JFFGGuideLines.ToolGotFocus = function(payload)
 {
     var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
     var editContext = FormIt.GroupEdit.GetInContextEditingPath();
-    //console.log("------------- guideLinesInstance: " + JSON.stringify(guideLinesInstance));    
-    //console.log("-------------        editContext: " + JSON.stringify(editContext));    
+
     // Don't apply inferences when editing the guide lines instance.
-    // WSM.GroupInstancePath APIs are horked up in v22
-    // TODO, use WSM.GroupInstancePath.AreEqual
-    if (JSON.stringify(guideLinesInstance) == JSON.stringify(editContext))
+    if (WSM.GroupInstancePath.AreEqual(guideLinesInstance, editContext))
     {
-        //console.log("In Guide Lines Instance, bailing -------------------------");
         return;
     }
 
     // Gather all the edges and make custom line inferences.
     var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
-    // WSM.GroupInstancePath APIs are horked up in v22
-    //var hisjtoryID = WSM.GroupInstancePath.GetFinalObjectHistoryID(guideLinesInstance).History;
+
     var hisjtoryID = JFFGGuideLines.GetGuideLinesHistory();
     var edges = WSM.APIGetAllObjectsByTypeReadOnly(hisjtoryID, WSM.nObjectType.nEdgeType);
     for (var i = 0; i < edges.length; ++i)
