@@ -1,8 +1,8 @@
 JFFGGuideLines = {};
 
-JFFGGuideLines.MakeGuideLinesHistory = function()
+// Create the Instance to hold the lines that will be used for guide lines
+/*Guidel Lines Group Instance Path*/ JFFGGuideLines.MakeGuideLinesInstance = function()
 {
-    console.log("In JFFGGuideLines.GetGuideLineHistory");
     var mainHistID = FormIt.Model.GetHistoryID();
     // Create the guide lines History.
     var groupID = WSM.APICreateGroup(mainHistID, []);
@@ -25,59 +25,72 @@ JFFGGuideLines.MakeGuideLinesHistory = function()
 
     // Return the path to the new instance.
     var guidelLinesObjectHistoryID = WSM.ObjectHistoryID(mainHistID, guideLinesInstance);
-    //console.log(JSON.stringify(guidelLinesObjectHistoryID));
     var guidelLinesGroupInstancePath =  WSM.GroupInstancePath(guidelLinesObjectHistoryID);
-    //console.log("guidelLinesGroupInstancePath: " + JSON.stringify(guidelLinesGroupInstancePath));
     return guidelLinesGroupInstancePath;
 }
 
-JFFGGuideLines.GetGuideLinesGroupInstancePath = function()
+// Get the guilde lines instance.  bMakeGuideLinesInstance indicates whether the instance 
+// should be created if it doesn't exist.
+/*Guidel Lines Group Instance Path*/ JFFGGuideLines.GetGuideLinesGroupInstancePath = function(bMakeGuideLinesInstance)
 {
-    //console.log("In JFFGGuideLines.GetGuideLineHistory");
-    
-    // Find the Guide Lines Instance and start editing it
-    // Try to find the guide lines instance
     var mainHistID = FormIt.Model.GetHistoryID();
+    
+    var objects = WSM.APIGetAllNonOwnedReadOnly(mainHistID);
+    if (objects.length == 0)
+    {
+        return WSM.INVALID_ID;
+    }
+
+    // Try to find the existing guide lines instance
     var instances = WSM.APIGetAllObjectsByTypeReadOnly(mainHistID, WSM.nObjectType.nInstanceType);
     for (var i = 0; i < instances.length; ++i)
     {
         var guideLinesInstance = instances[i];
-        //console.log("instance: " + guideLinesInstance);
         var attribute = WSM.Utils.GetStringAttributeForObject(mainHistID, guideLinesInstance, "JFFGGuideLinesGroup");
-        //console.log(JSON.stringify("attribute: " + JSON.stringify(attribute)));
         if (attribute.success)
         {
             // Return the path to the new instance.
             var guidelLinesObjectHistoryID = WSM.ObjectHistoryID(mainHistID, guideLinesInstance);
-            //console.log(JSON.stringify(guidelLinesObjectHistoryID));
             var guidelLinesGroupInstancePath =  WSM.GroupInstancePath(guidelLinesObjectHistoryID);
-            //console.log("guidelLinesGroupInstancePath: " + JSON.stringify(guidelLinesGroupInstancePath));
             return guidelLinesGroupInstancePath;
         }
     }
 
-    // Didn't find the Group, make it...
-    return JFFGGuideLines.MakeGuideLinesHistory();
+    if (bMakeGuideLinesInstance)
+    {
+        // Didn't find the Instance, make it...
+        return JFFGGuideLines.MakeGuideLinesInstance();
+    }
+
+    return WSM.INVALID_ID;
 }
 
-JFFGGuideLines.GetGuideLinesHistory = function()
+// Get the reference History ID of the Guilde Lines Instance
+/*History ID*/ JFFGGuideLines.GetGuideLinesHistory = function()
 {
-    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath();
-    //console.log("(JFFGGuideLines.GetGuideLinesHistory) guideLinesInstance: " + JSON.stringify(guideLinesInstance));
+    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
+    if (guideLinesInstance == WSM.INVALID_ID)
+    {
+        return WSM.INVALID_ID;
+    }
+
     var ids = guideLinesInstance.ids[0];
-    //console.log("(JFFGGuideLines.GetGuideLinesHistory) guideLinesInstance.ids: " + JSON.stringify(ids));
     var hisjtoryID = ids.History;
     var instanceID = ids.Object;
 
     var refHistory = WSM.APIGetGroupReferencedHistoryReadOnly(hisjtoryID, instanceID);
-    console.log("(JFFGGuideLines.GetGuideLinesHistory) refHistory: " + JSON.stringify(refHistory));
     return refHistory;
 }
 
 // Returns true if editing in the Guide Lines Instance
-JFFGGuideLines.InGuideLinesInstance = function()
+/*bool*/ JFFGGuideLines.InGuideLinesInstance = function()
 {
-    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath();
+    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
+    if (guideLinesInstance == WSM.INVALID_ID)
+    {
+        return false;
+    }
+
     var editContext = FormIt.GroupEdit.GetInContextEditingPath();
     return JSON.stringify(guideLinesInstance) == JSON.stringify(editContext);
 }
@@ -85,24 +98,29 @@ JFFGGuideLines.InGuideLinesInstance = function()
 // Start adding a guide line.
 JFFGGuideLines.AddGuideLine = function()
 {
-    if (JFFGGuideLines.InGuideLinesInstance() && WSM.GroupInstancePath.IsValid(JFFGGuideLines.m_OriginalEditContext))
+    if (JFFGGuideLines.InGuideLinesInstance())
     {
         FormIt.UI.ShowNotification("Exited Guide Lines Creation.", FormIt.NotificationType.Information);
 
-        FormIt.GroupEdit.SetInContextEditingPath(JFFGGuideLines.m_OriginalEditContext);
+        if (WSM.GroupInstancePath.IsValid(JFFGGuideLines.m_OriginalEditContext))
+            FormIt.GroupEdit.SetInContextEditingPath(JFFGGuideLines.m_OriginalEditContext);
+        else
+            FormIt.GroupEdit.EndEditInContext();
         return;
     }
 
     FormIt.UI.ShowNotification("Start making lines.  When finished click the AG button again.", FormIt.NotificationType.Information);
 
     // Cache the current context to switch back to.
-    JFFGGuideLines.m_OriginalEditContext = FormIt.GroupEdit.GetInContextEditingPath();
+    if (!JFFGGuideLines.InGuideLinesInstance())
+    {
+        JFFGGuideLines.m_OriginalEditContext = FormIt.GroupEdit.GetInContextEditingPath();
+    }
 
     WSM.InferenceEngine.ClearCustomLineInferences();
 
     // Find the Guide Lines Instance and start editing it
-    var guidelLinesGroupInstancePath = JFFGGuideLines.GetGuideLinesGroupInstancePath();
-    console.log("guidelLinesGroupInstancePath: " + JSON.stringify(guidelLinesGroupInstancePath));    
+    var guidelLinesGroupInstancePath = JFFGGuideLines.GetGuideLinesGroupInstancePath(true /*bMakeGuideLinesInstance*/);
 
     FormIt.GroupEdit.SetInContextEditingPath(guidelLinesGroupInstancePath);
     FormIt.Tools.StartTool(FormIt.ToolType.POLYLINE);
@@ -112,8 +130,7 @@ FormIt.Commands.RegisterJSCommand("JFFGGuideLines.AddGuideLine");
 // New tool, need to set the guide lines on the inference engine.
 JFFGGuideLines.ToolGotFocus = function(payload)
 {
-    //console.log("(ToolGotFocus) payload: " + JSON.stringify(payload));
-    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath();
+    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
     var editContext = FormIt.GroupEdit.GetInContextEditingPath();
     //console.log("------------- guideLinesInstance: " + JSON.stringify(guideLinesInstance));    
     //console.log("-------------        editContext: " + JSON.stringify(editContext));    
@@ -127,25 +144,21 @@ JFFGGuideLines.ToolGotFocus = function(payload)
     }
 
     // Gather all the edges and make custom line inferences.
-    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath();
-    //console.log("------------- guideLinesInstance: " + JSON.stringify(guideLinesInstance));    
+    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
     // WSM.GroupInstancePath APIs are horked up in v22
     //var hisjtoryID = WSM.GroupInstancePath.GetFinalObjectHistoryID(guideLinesInstance).History;
     var hisjtoryID = JFFGGuideLines.GetGuideLinesHistory();
     var edges = WSM.APIGetAllObjectsByTypeReadOnly(hisjtoryID, WSM.nObjectType.nEdgeType);
-    console.log("-------------        edges: " + JSON.stringify(edges));    
     for (var i = 0; i < edges.length; ++i)
     {
         var edgePath = WSM.GroupInstancePath.AppendObjectHistoryID(guideLinesInstance, WSM.ObjectHistoryID(hisjtoryID, edges[i]));
         WSM.InferenceEngine.AddLineInferencesForObject(edgePath, true /*noLimit*/, true /*alwaysShowInference*/);
-        //WSM.InferenceEngine.AddLineInferencesForObject(edgePath);
     }
 }
 
 // New tool, need to set the guide lines on the inference engine.
 JFFGGuideLines.ClearGuideLines = function()
 {
-    //console.log("-------------  (JFFGGuideLines.ClearGuideLines)");
     WSM.InferenceEngine.ClearCustomLineInferences();
 }
 FormIt.Commands.RegisterJSCommand("JFFGGuideLines.ClearGuideLines");
@@ -153,38 +166,43 @@ FormIt.Commands.RegisterJSCommand("JFFGGuideLines.ClearGuideLines");
 // New tool, need to set the guide lines on the inference engine.
 JFFGGuideLines.InContextEditing = function(payload)
 {
-    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath();
+    // Check if the instance exists so that if it doesn't, just bail.
+    var guideLinesInstance = JFFGGuideLines.GetGuideLinesGroupInstancePath(false /*bMakeGuideLinesInstance*/);
+    if (guideLinesInstance == WSM.INVALID_ID) return;
+
     var payloadStr = JSON.stringify(payload);
     var guideLinesInstanceStr = JSON.stringify(guideLinesInstance);
 
-    //console.log("(InContextEditing) payload           : " + payloadStr);
-    //console.log("(InContextEditing) guideLinesInstance: " + guideLinesInstanceStr);
-
     var layerId = FormIt.Layers.GetLayerID("JFFG Guide Lines");
-    if (layerId == WSM.INVALID_ID)
+    if (layerId != WSM.INVALID_ID)
     {
-        return;
+        // If we are editing the guide lines instance, turn on the layer
+        var layerData = FormIt.Layers.GetLayerData(layerId);
+        layerData.Visible = payloadStr == guideLinesInstanceStr;
+        FormIt.Layers.SetLayersVisibility(layerData);
     }
-
-    // If we are editing the guide lines instance, turn on the layer
-    var layerData = FormIt.Layers.GetLayerData(layerId);
-    layerData.Visible = payloadStr == guideLinesInstanceStr;
-    FormIt.Layers.SetLayersVisibility(layerData);
 }
 
 // Message handling
 
- // Create a Message Listener that handles calling the subscribed message handlers.
- if (!(JFFGGuideLines.hasOwnProperty("listener")))
- {
-     JFFGGuideLines.listener = FormIt.Messaging.NewMessageListener();
-     //console.log("Creating JFFGGuideLines.listener.");
- }
- 
- // Assign the msg handlers
- JFFGGuideLines.listener["FormIt.Message.kToolGotFocus"] = function(payload) { JFFGGuideLines.ToolGotFocus(payload); };
- JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kToolGotFocus");
+// Create a Message Listener that handles calling the subscribed message handlers.
+if (!(JFFGGuideLines.hasOwnProperty("listener")))
+{
+    JFFGGuideLines.listener = FormIt.Messaging.NewMessageListener();
+}
 
- JFFGGuideLines.listener["FormIt.Message.kInContextEditing"] = function(payload) { JFFGGuideLines.InContextEditing(payload); };
- JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kInContextEditing");
+// Assign the msg handlers
+JFFGGuideLines.listener["FormIt.Message.kToolGotFocus"] = function(payload) 
+{
+    JFFGGuideLines.ToolGotFocus(payload);
+};
 
+JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kToolGotFocus");
+
+JFFGGuideLines.listener["FormIt.Message.kInContextEditing"] = function(payload)
+{
+    JFFGGuideLines.InContextEditing(payload);
+};
+JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kInContextEditing");
+
+//TODO: Need File->New message to set JFFGGuideLines.m_OriginalEditContext to WSM.INVALID_ID
