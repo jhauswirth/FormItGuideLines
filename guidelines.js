@@ -183,6 +183,13 @@ JFFGGuideLines.InContextEditing = function(payload)
     }
 }
 
+// New tool, need to set the guide lines on the inference engine.
+JFFGGuideLines.Help = function()
+{
+    FormIt.OpenURL("https://github.com/jhauswirth/FormItGuideLines#readme");
+}
+FormIt.Commands.RegisterJSCommand("JFFGGuideLines.Help");
+
 // Message handling
 
 // Create a Message Listener that handles calling the subscribed message handlers.

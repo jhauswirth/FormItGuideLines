@@ -10,7 +10,11 @@
             "name": "Clear Guide Lines",
             "command": "JFFGGuideLines.ClearGuideLines",
             "iconText": "CL"
+        },
+        {
+            "name": "Help",
+            "command": "JFFGGuideLines.Help",
+            "iconText": "?"
         }
-
     ]
 }
