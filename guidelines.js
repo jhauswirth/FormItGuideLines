@@ -198,7 +198,6 @@ JFFGGuideLines.listener["FormIt.Message.kToolGotFocus"] = function(payload)
 {
     JFFGGuideLines.ToolGotFocus(payload);
 };
-
 JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kToolGotFocus");
 
 JFFGGuideLines.listener["FormIt.Message.kInContextEditing"] = function(payload)
@@ -207,4 +206,9 @@ JFFGGuideLines.listener["FormIt.Message.kInContextEditing"] = function(payload)
 };
 JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kInContextEditing");
 
-//TODO: Need File->New message to set JFFGGuideLines.m_OriginalEditContext to WSM.INVALID_ID
+JFFGGuideLines.listener["FormIt.Message.kNewModelRequested"] = function(payload)
+{
+    JFFGGuideLines.m_OriginalEditContext = WSM.INVALID_ID;
+    JFFGGuideLines.ClearGuideLines();
+};
+JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kNewModelRequested");
