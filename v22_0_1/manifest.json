@@ -1,6 +1,6 @@
 {
     "PluginName": "JFFG Guide Lines",
-    "PluginDescription": "Creates Guie Lines for FormIt",
+    "PluginDescription": "Creates Guide Lines for FormIt",
     "PluginType": "Toolbar",
     "ToolbarURL": "PLUGINLOCATION/toolbar.json",
     "Scripts": [
