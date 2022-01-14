@@ -35,12 +35,6 @@ JFFGGuideLines.LastNotificationID = -1;
 /*Guidel Lines Group Instance Path*/ JFFGGuideLines.GetGuideLinesGroupInstancePath = function(bMakeGuideLinesInstance)
 {
     var mainHistID = FormIt.Model.GetHistoryID();
-    
-    var objects = WSM.APIGetAllNonOwnedReadOnly(mainHistID);
-    if (objects.length == 0)
-    {
-        return WSM.INVALID_ID;
-    }
 
     // Try to find the existing guide lines instance
     var instances = WSM.APIGetAllObjectsByTypeReadOnly(mainHistID, WSM.nObjectType.nInstanceType);
