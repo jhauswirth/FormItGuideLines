@@ -2,6 +2,7 @@
     "PluginName": "JFFG Guide Lines",
     "PluginDescription": "Creates Guide Lines for FormIt",
     "PluginType": "Toolbar",
+    "PanelIcon": "PLUGINLOCATION/plugin.png",
     "ToolbarURL": "PLUGINLOCATION/toolbar.json",
     "Scripts": [
         "PLUGINLOCATION/guidelines.js"
