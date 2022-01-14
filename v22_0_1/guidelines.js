@@ -1,4 +1,5 @@
 JFFGGuideLines = {};
+JFFGGuideLines.LastNotificationID = -1;
 
 // Create the Instance to hold the lines that will be used for guide lines
 /*Guidel Lines Group Instance Path*/ JFFGGuideLines.MakeGuideLinesInstance = function()
@@ -95,12 +96,21 @@ JFFGGuideLines = {};
     return JSON.stringify(guideLinesInstance) == JSON.stringify(editContext);
 }
 
+JFFGGuideLines.CloseLastNotification = function()
+{
+    if (JFFGGuideLines.LastNotificationID.handle > 0)
+    {
+        FormIt.UI.CloseNotification(JFFGGuideLines.LastNotificationID);
+    }
+}
+
 // Start adding a guide line.
 JFFGGuideLines.AddGuideLine = function()
 {
     if (JFFGGuideLines.InGuideLinesInstance())
     {
-        FormIt.UI.ShowNotification("Exited Guide Lines Creation.", FormIt.NotificationType.Information);
+        JFFGGuideLines.CloseLastNotification();
+        JFFGGuideLines.LastNotificationID = FormIt.UI.ShowNotification("Exited Guide Lines Creation.", FormIt.NotificationType.Information);
 
         if (WSM.GroupInstancePath.IsValid(JFFGGuideLines.m_OriginalEditContext))
             FormIt.GroupEdit.SetInContextEditingPath(JFFGGuideLines.m_OriginalEditContext);
@@ -109,7 +119,8 @@ JFFGGuideLines.AddGuideLine = function()
         return;
     }
 
-    FormIt.UI.ShowNotification("Start making lines.  When finished click the AG button again.", FormIt.NotificationType.Information);
+    JFFGGuideLines.CloseLastNotification();
+    JFFGGuideLines.LastNotificationID = FormIt.UI.ShowNotification("Start making lines.  When finished click the AG button again.", FormIt.NotificationType.Information);
 
     // Cache the current context to switch back to.
     if (!JFFGGuideLines.InGuideLinesInstance())
@@ -152,11 +163,11 @@ JFFGGuideLines.ToolGotFocus = function(payload)
 }
 
 // New tool, need to set the guide lines on the inference engine.
-JFFGGuideLines.ClearGuideLines = function()
+JFFGGuideLines.HideGuideLines = function()
 {
     WSM.InferenceEngine.ClearCustomLineInferences();
 }
-FormIt.Commands.RegisterJSCommand("JFFGGuideLines.ClearGuideLines");
+FormIt.Commands.RegisterJSCommand("JFFGGuideLines.HideGuideLines");
 
 // New tool, need to set the guide lines on the inference engine.
 JFFGGuideLines.InContextEditing = function(payload)
@@ -209,6 +220,6 @@ JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kInContextEditing");
 JFFGGuideLines.listener["FormIt.Message.kNewModelRequested"] = function(payload)
 {
     JFFGGuideLines.m_OriginalEditContext = WSM.INVALID_ID;
-    JFFGGuideLines.ClearGuideLines();
+    JFFGGuideLines.HideGuideLines();
 };
 JFFGGuideLines.listener.SubscribeMessage("FormIt.Message.kNewModelRequested");

@@ -7,9 +7,9 @@
             "iconText": "AG"
         },
         {
-            "name": "Clear Guide Lines",
-            "command": "JFFGGuideLines.ClearGuideLines",
-            "iconText": "CL"
+            "name": "Hide Guide Lines",
+            "command": "JFFGGuideLines.HideGuideLines",
+            "iconText": "HD"
         },
         {
             "name": "Help",
